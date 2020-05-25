@@ -102,8 +102,10 @@ if __name__=="__main__":
 
 	try:
 
+		vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
+
 		while not rospy.is_shutdown():
-			vel = Twist(Vector3(0,0,0), Vector3(0,0,0.1))
+			vel = Twist(Vector3(0,0,0), Vector3(0,0,0.3))
 			if len(media) != 0 and len(centro) != 0:
 				print("Média dos vermelhos: {0}, {1}".format(media[0], media[1]))
 				print("Centro dos vermelhos: {0}, {1}".format(centro[0], centro[1]))
@@ -111,19 +113,19 @@ if __name__=="__main__":
 
 				if valor_dist > 0.05:
 
-					if -40 < spec and spec < 40:
-						vel = Twist(Vector3(0.2,0,0), Vector3(0,0,0))
+					if -50 < spec and spec < 50:
+						vel = Twist(Vector3(0.4,0,0), Vector3(0,0,0))
 					
-					elif spec < -40:
+					elif spec < -50:
 						vel = Twist(Vector3(0,0,0), Vector3(0,0,0.3))
 
-					elif spec > 40:
+					elif spec > 50:
 						vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.3))
 
-				elif valor_dist > 0.4 and valor_dist <= 0.85:
-					vel = Twist(Vector3(0.04,0,0), Vector3(0,0,0))
-				else:
-					vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
+				#elif valor_dist > 0.4 and valor_dist <= 0.85:
+				#	vel = Twist(Vector3(0.04,0,0), Vector3(0,0,0))
+				#else:
+				#	vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
 
 
 			velocidade_saida.publish(vel)
