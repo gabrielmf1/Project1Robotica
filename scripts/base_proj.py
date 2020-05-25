@@ -10,7 +10,7 @@ import math
 import cv2
 import time
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Image, CompressedImage
+from sensor_msgs.msg import Image, CompressedImage, LaserScan
 from cv_bridge import CvBridge, CvBridgeError
 from numpy import linalg
 from tf import transformations
@@ -20,6 +20,11 @@ from geometry_msgs.msg import Twist, Vector3, Pose, Vector3Stamped
 from ar_track_alvar_msgs.msg import AlvarMarker, AlvarMarkers
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
+
+
+import cormodule
+import le_scan
+import roda
 
 
 import visao_module
@@ -126,6 +131,19 @@ def roda_todo_frame(imagem):
         cv_image = saida_net.copy()
     except CvBridgeError as e:
         print('ex', e)
+
+
+valor_dist = 0
+def scaneou(dado):
+    print("Faixa valida: ", dado.range_min , " - ", dado.range_max )
+    print("Leituras:")
+    print(np.array(dado.ranges).round(decimals=2))
+    #print("Intensities")
+    #print(np.array(dado.intensities).round(decimals=2))
+    global valor_dist
+    if dado.range_min < dado.ranges[0] < dado.range_max:
+        valor_dist = dado.ranges[0]
+
     
 if __name__=="__main__":
     rospy.init_node("cor")
@@ -138,6 +156,8 @@ if __name__=="__main__":
 
     print("Usando ", topico_imagem)
 
+    recebe_scan = rospy.Subscriber("/scan", LaserScan, scaneou)
+
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
 
     tfl = tf2_ros.TransformListener(tf_buffer) #conversao do sistema de coordenadas 
@@ -147,21 +167,36 @@ if __name__=="__main__":
     # [('chair', 86.965459585189819, (90, 141), (177, 265))]
 
     try:
-        # Inicializando - por default gira no sentido anti-horário
-        # vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
-        
-        while not rospy.is_shutdown():
-            for r in resultados:
-                print(r)
-            #velocidade_saida.publish(vel)
 
-            if cv_image is not None:
-                # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
-                cv2.imshow("cv_image no loop principal", cv_image)
-                cv2.waitKey(1)
+        while not rospy.is_shutdown():
+            vel = Twist(Vector3(0,0,0), Vector3(0,0,0.1))
+            if len(media) != 0 and len(centro) != 0:
+                print("Média dos vermelhos: {0}, {1}".format(media[0], media[1]))
+                print("Centro dos vermelhos: {0}, {1}".format(centro[0], centro[1]))
+                spec = media[0]-centro[0]
+
+                if valor_dist > 0.85:
+
+                    if -40 < spec and spec < 40:
+                        vel = Twist(Vector3(0.2,0,0), Vector3(0,0,0))
+                    
+                    elif spec < -40:
+                        vel = Twist(Vector3(0,0,0), Vector3(0,0,0.3))
+
+                    elif spec > 40:
+                        vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.3))
+
+                elif valor_dist > 0.4 and valor_dist <= 0.85:
+                    vel = Twist(Vector3(0.04,0,0), Vector3(0,0,0))
+                else:
+                    vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
+
+
+            velocidade_saida.publish(vel)
             rospy.sleep(0.1)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
+
 
 
