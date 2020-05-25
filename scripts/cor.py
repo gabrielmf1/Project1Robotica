@@ -34,7 +34,7 @@ check_delay = False
 
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
-	print("frame")
+	#print("frame")
 	global cv_image
 	global media
 	global centro
@@ -43,9 +43,9 @@ def roda_todo_frame(imagem):
 	imgtime = imagem.header.stamp
 	lag = now-imgtime # calcula o lag
 	delay = lag.nsecs
-	print("delay ", "{:.3f}".format(delay/1.0E9))
+	#print("delay ", "{:.3f}".format(delay/1.0E9))
 	if delay > atraso and check_delay==True:
-		print("Descartando por causa do delay do frame:", delay)
+		#print("Descartando por causa do delay do frame:", delay)
 		return 
 	try:
 		antes = time.clock()
@@ -57,11 +57,11 @@ def roda_todo_frame(imagem):
 	except CvBridgeError as e:
 		print('ex', e)
 
-valor_dist = 0
+valor_dist = 0.35
 def scaneou(dado):
-	print("Faixa valida: ", dado.range_min , " - ", dado.range_max )
-	print("Leituras:")
-	print(np.array(dado.ranges).round(decimals=2))
+	#print("Faixa valida: ", dado.range_min , " - ", dado.range_max )
+	#print("Leituras:")
+	#print(np.array(dado.ranges).round(decimals=2))
 	#print("Intensities")
 	#print(np.array(dado.intensities).round(decimals=2))
 	global valor_dist
@@ -94,7 +94,7 @@ if __name__=="__main__":
 	# 
 
 	recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
-	print("Usando ", topico_imagem)
+	#print("Usando ", topico_imagem)
 
 	recebe_scan = rospy.Subscriber("/scan", LaserScan, scaneou)
 
@@ -102,30 +102,31 @@ if __name__=="__main__":
 
 	try:
 
-		vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
+		#vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
 
 		while not rospy.is_shutdown():
 			vel = Twist(Vector3(0,0,0), Vector3(0,0,0.3))
 			if len(media) != 0 and len(centro) != 0:
-				print("Média dos vermelhos: {0}, {1}".format(media[0], media[1]))
-				print("Centro dos vermelhos: {0}, {1}".format(centro[0], centro[1]))
+				#print("Média dos vermelhos: {0}, {1}".format(media[0], media[1]))
+				#print("Centro dos vermelhos: {0}, {1}".format(centro[0], centro[1]))
 				spec = media[0]-centro[0]
 
-				if valor_dist > 0.05:
+				print(valor_dist)
+				if valor_dist > 0.3:
 
-					if -50 < spec and spec < 50:
+					if -40 < spec and spec < 40:
 						vel = Twist(Vector3(0.4,0,0), Vector3(0,0,0))
 					
-					elif spec < -50:
+					elif spec < -40:
 						vel = Twist(Vector3(0,0,0), Vector3(0,0,0.3))
 
-					elif spec > 50:
+					elif spec > 40:
 						vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.3))
 
-				#elif valor_dist > 0.4 and valor_dist <= 0.85:
-				#	vel = Twist(Vector3(0.04,0,0), Vector3(0,0,0))
+				#elif valor_dist > 0.2:
+				#	vel = Twist(Vector3(0,0,0), Vector3(0,0,1))
 				#else:
-				#	vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
+				#	vel = Twist(Vector3(-0.1,0,0), Vector3(0,0,0))
 
 
 			velocidade_saida.publish(vel)
