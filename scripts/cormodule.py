@@ -30,7 +30,7 @@ def identifica_cor(frame):
     frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
 
-    cor_rgb = "#1090fe"
+    cor_rgb = "#ff00fd"
     #006306 --> verde
     #01ff0a --> verde claro
     #1c8ce6 --> azul

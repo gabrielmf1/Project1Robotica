@@ -17,7 +17,6 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import LaserScan
 import cormodule
 import le_scan
-import roda
 
 bridge = CvBridge()
 
@@ -57,7 +56,7 @@ def roda_todo_frame(imagem):
 	except CvBridgeError as e:
 		print('ex', e)
 
-valor_dist = 0.35
+valor_dist = 0.55
 def scaneou(dado):
 	#print("Faixa valida: ", dado.range_min , " - ", dado.range_max )
 	#print("Leituras:")
@@ -96,7 +95,7 @@ if __name__=="__main__":
 	recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
 	#print("Usando ", topico_imagem)
 
-	recebe_scan = rospy.Subscriber("/scan", LaserScan, scaneou)
+
 
 	velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 3)
 
@@ -111,26 +110,38 @@ if __name__=="__main__":
 				#print("Centro dos vermelhos: {0}, {1}".format(centro[0], centro[1]))
 				spec = media[0]-centro[0]
 
-				print(valor_dist)
-				if valor_dist > 0.3:
+				#print(valor_dist)
+				if valor_dist > 0.5:
+					recebe_scan = rospy.Subscriber("/scan", LaserScan, scaneou)
 
 					if -40 < spec and spec < 40:
 						vel = Twist(Vector3(0.4,0,0), Vector3(0,0,0))
+						velocidade_saida.publish(vel)
+						rospy.sleep(0.1)
 					
 					elif spec < -40:
 						vel = Twist(Vector3(0,0,0), Vector3(0,0,0.3))
+						velocidade_saida.publish(vel)
+						rospy.sleep(0.1)
 
 					elif spec > 40:
 						vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.3))
+						velocidade_saida.publish(vel)
+						rospy.sleep(0.1)
 
-				#elif valor_dist > 0.2:
-				#	vel = Twist(Vector3(0,0,0), Vector3(0,0,1))
-				#else:
-				#	vel = Twist(Vector3(-0.1,0,0), Vector3(0,0,0))
+				elif valor_dist > 0.35 and valor_dist <= 0.5:
+					vel = Twist(Vector3(0.04,0,0), Vector3(0,0,0))
+					velocidade_saida.publish(vel)
+					rospy.sleep(0.1)
+
+				else:
+					vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
+					velocidade_saida.publish(vel)
+					rospy.sleep(0.1)
+				
 
 
-			velocidade_saida.publish(vel)
-			rospy.sleep(0.1)
+			
 
 	except rospy.ROSInterruptException:
 	    print("Ocorreu uma exceção com o rospy")
